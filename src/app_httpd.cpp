@@ -33,6 +33,12 @@ void updateMotors();
 float current_speed_left = 0.0;
 float current_speed_right = 0.0;
 
+float max_speed_right = 50.0;
+float max_speed_left = 50.0;
+float update_speed_left;
+float update_speed_right;
+
+
 // Info we pass to the webapp
 extern char myName[];
 extern char myVer[];
@@ -235,6 +241,16 @@ static esp_err_t cmd_handler(httpd_req_t *req){
     char variable[32] = {0,};
     char value[32] = {0,};
 
+
+    if (max_speed_left != update_speed_left){
+    updateMotors();
+    update_speed_left =  max_speed_left;
+    }  
+    if (max_speed_right != update_speed_right){
+    updateMotors();
+    update_speed_right =  max_speed_right;
+    }  
+    
     buf_len = httpd_req_get_url_query_len(req) + 1;
     if (buf_len > 1) {
         buf = (char*)malloc(buf_len);
@@ -270,12 +286,15 @@ static esp_err_t cmd_handler(httpd_req_t *req){
     }
     else if(!strcmp(variable, "quality")) res = s->set_quality(s, val);
     else if(!strcmp(variable, "contrast")) res = s->set_contrast(s, val);
+
     else if (!strcmp(variable, "motor_left")) {
-        current_speed_left = std::max(-1.0f, std::min(1.0f, (float) atof(value)));
+        //current_speed_left = std::max(-1.0f, std::min(1.0f, (float) atof(value)));
+        current_speed_left = (float) atof(value);
         //motors.drive(current_speed_left, current_speed_right, 0);
     }
     else if (!strcmp(variable, "motor_right")) {
         current_speed_right = std::max(-1.0f, std::min(1.0f, (float) atof(value)));
+        current_speed_right = (float) atof(value);
         //motors.drive(current_speed_left, current_speed_right, 0);
     }
     else if (!strcmp(variable, "motor_both")) {
@@ -286,6 +305,7 @@ static esp_err_t cmd_handler(httpd_req_t *req){
             //motors.drive(current_speed_left, current_speed_right, 0);
             Serial.printf("Motor left: %f - right %f \n",(float) atof(value), (float) atof(value2));
             updateMotors();
+            
         }
     }
     else if(!strcmp(variable, "brightness")) res = s->set_brightness(s, val);
@@ -309,6 +329,8 @@ static esp_err_t cmd_handler(httpd_req_t *req){
     else if(!strcmp(variable, "special_effect")) res = s->set_special_effect(s, val);
     else if(!strcmp(variable, "wb_mode")) res = s->set_wb_mode(s, val);
     else if(!strcmp(variable, "ae_level")) res = s->set_ae_level(s, val);
+    else if(!strcmp(variable, "max_speed_right") && (max_speed_right = val));
+    else if(!strcmp(variable, "max_speed_left") && (max_speed_left = val));
     else if(!strcmp(variable, "lamp") && (lampVal != -1)) {
       Serial.print("Lamp: ");
       lampVal = val;
@@ -449,8 +471,16 @@ void startCameraServer(){
 // set motor directions and speed 
 // TODO: fix bad SoC, this routine has nothing to do with the web server
 void updateMotors(){
-    ledcWrite(MOTOR_L_PWM_CHAN, abs(current_speed_left)*1023);
-    ledcWrite(MOTOR_R_PWM_CHAN, abs(current_speed_right)*1023);
+
+    ledcWrite(MOTOR_L_PWM_CHAN, abs(current_speed_left)*1023); //*max_speed_left/100);
+    ledcWrite(MOTOR_R_PWM_CHAN, abs(current_speed_right)*1023*max_speed_right/100);
+    Serial.println(current_speed_right);
+    Serial.println(current_speed_left);
+    Serial.println(max_speed_right);
+    Serial.println(max_speed_left);
+    Serial.println(abs(current_speed_right)*1023*max_speed_right/100);
+    Serial.println(abs(current_speed_right)*1023*max_speed_left/100);
+
     // directions depends on whether speed is negative or positive
     current_speed_left > 0 ? digitalWrite(MOTOR_L_DIR_PIN, HIGH) : digitalWrite(MOTOR_L_DIR_PIN, LOW);
     current_speed_right > 0 ? digitalWrite(MOTOR_R_DIR_PIN, HIGH) : digitalWrite(MOTOR_R_DIR_PIN, LOW);

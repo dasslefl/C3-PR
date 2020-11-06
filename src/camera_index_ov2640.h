@@ -428,6 +428,18 @@ const uint8_t index_ov2640_html[] PROGMEM = R"=====(
                             <input type="range" id="quality" min="10" max="63" value="10" class="default-action">
                             <div class="range-max">63</div>
                         </div>
+                        <div class="input-group" id="max_speed_right-group">
+                            <label for="max_speed_right">max speed right</label>
+                            <div class="range-min">0</div>
+                            <input type="range" id="max_speed_right" min="0" max="100" value="50" class="default-action">
+                            <div class="range-max">100</div>
+                        </div>
+                        <div class="input-group" id="max_speed_left">
+                            <label for="max_speed_left">max speed left</label>
+                            <div class="range-min">0</div>
+                            <input type="range" id="max_speed_left" min="0" max="100" value="50" class="default-action">
+                            <div class="range-max">100</div>
+                        </div>
                         <div class="input-group" id="brightness-group">
                             <label for="brightness">Brightness</label>
                             <div class="range-min">-2</div>
@@ -629,6 +641,13 @@ const uint8_t index_ov2640_html[] PROGMEM = R"=====(
 
 
         <script>
+
+  var pressed_w = false;
+  var pressed_a = false;
+  var pressed_s = false;
+  var pressed_d = false;
+  var last_mleft = 0;
+  var last_mright = 0;
     
 document.addEventListener('DOMContentLoaded', function (event) {
   var baseHost = document.location.origin
@@ -878,34 +897,119 @@ document.addEventListener('DOMContentLoaded', function (event) {
     updateConfig(framesize)
   }
 
+
+
+
   // control robot with keyboard keys
+  //checks which controlkeys have been pressed and sets motorspeed according to turning values
   document.addEventListener('keypress', (e) => {
     mleft = 0;
     mright = 0;
+    
+    console.log("keypress",pressed_w,pressed_a,pressed_s,pressed_d);
+    
+
+    if (e.key === "x" ) {   
+        mleft = 0;
+        mright = 0;
+    }
+    if (e.key === "w" ) {
+       pressed_w = true;
+    }
     if (e.key === "s") {
-      mleft = 0;
-      mright = 0;
+        pressed_s = true;
     }
+    if (e.key === "d" ) {
+        pressed_d = true;
+    }
+    if (e.key === "a" ) {
+        pressed_a = true;
+    }
+    //w
+    if(pressed_w){
+       mleft = 1;
+       mright = 1;
+    }
+    //s
+    if(pressed_s){
+        mleft = -1;
+        mright = -1;
+     }
+    //d
+    if(pressed_d){
+        mleft = -0.5;
+        mright = 0.5;
+     }
+    //a
+    if(pressed_a){
+        mleft =  0.5;
+        mright = -0.5;
+     }
+    // wd
+    if(pressed_w && pressed_a) {
+       mleft = 1;
+       mright = 0.5;
+    }
+    // wa
+    if(pressed_w && pressed_d) {
+        mleft = 0.5;
+        mright = 1;
+    }
+     // sd
+    if(pressed_s && pressed_a) {
+        mleft = -1;
+        mright = -0.5;
+    }
+     // sa
+    if(pressed_s && pressed_d) {
+        mleft = -0.5;
+        mright = -1;
+    }
+      // changing Keyinputs trigger data transmission
+    console.log(mleft,last_mleft);
+
+    if(mleft!=last_mleft || mright != last_mright) {
+      console.log(mleft,last_mleft);
+      last_mright = mright;
+      last_mleft = mleft; 
+      fetch(`${baseHost}/control?var=motor_both&val=`+mleft+`&val2=`+mright)
+            .then(response => {
+              console.log(`request finished, status: ${response.status}`);
+          })
+      
+      }
+
+  });
+
+  //checks which controlkeys have been released and sets motorspeed to 0
+  document.addEventListener('keyup', (e) => {
+    //console.log(e);
+    //console.log(pressed_w,pressed_a,pressed_s,pressed_d);
+
     if (e.key === "w") {
-      mleft = 1;
-      mright = 1;
-    }
-    if (e.key === "x") {
-      mleft = -1;
-      mright = -1;
+      pressed_w = false;
     }
     if (e.key === "a") {
-      mleft = -1;
-      mright = 1;
+      pressed_a = false;
+    }
+    if (e.key === "s") {
+      pressed_s = false;
     }
     if (e.key === "d") {
-      mleft =  1;
-      mright = -1;
+      pressed_d = false;
     }
-    fetch(`${baseHost}/control?var=motor_both&val=`+mleft+`&val2=`+mright)
-          .then(response => {
-            console.log(`request finished, status: ${response.status}`)
-        })
+    console.log("keyup",pressed_w,pressed_a,pressed_s,pressed_d)
+    if(pressed_w == false && pressed_a == false && pressed_s == false && pressed_d == false ) { //time2stop
+        mleft =  0;
+        mright = 0;
+        last_mleft=0;
+        last_mright=0;
+        console.log(mleft,mright);
+        fetch(`${baseHost}/control?var=motor_both&val=`+mleft+`&val2=`+mright)
+              .then(response => {
+                console.log(`request finished, status: ${response.status}`)
+            })
+        }
   });
 
   if(canGame()) {
