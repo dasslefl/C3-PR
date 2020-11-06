@@ -74,6 +74,9 @@ float lampR;                   // The R value in the PWM graph equation (calcula
 void startCameraServer();
 void flashLED(int flashtime);
 
+#include "SPIFFS.h"
+
+
 void setup() {
   Serial.begin(115200);
   Serial.setDebugOutput(true);
@@ -83,6 +86,9 @@ void setup() {
   Serial.println(myName);
   Serial.print("Code Built: ");
   Serial.println(myVer);
+
+  //init Filessytem for /data dir
+  SPIFFS.begin(true);
 
 // If we have a notification LED set it to output
 #ifdef LED_PIN
