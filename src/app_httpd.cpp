@@ -363,6 +363,10 @@ static esp_err_t cmd_handler(httpd_req_t *req)
             updateMotors();
         }
     }
+    else if (!strcmp(variable, "reboot"))
+    {
+        ESP.restart();
+    }
     else if (!strcmp(variable, "brightness"))
         res = s->set_brightness(s, val);
     else if (!strcmp(variable, "saturation"))

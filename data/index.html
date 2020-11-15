@@ -400,6 +400,7 @@
                 style="float:left;">&#9776;&nbsp;&nbsp;Settings&nbsp;&nbsp;&nbsp;&nbsp;</label>
             <button id="get-still" style="float:left;">Get Still</button>
             <button id="toggle-stream" style="float:left;">Start Stream</button>
+            <button id="trigger-reboot" style="float:left;">Reboot</button>
         </div>
         <div id="content">
             <div id="sidebar">
@@ -806,6 +807,7 @@
             const viewContainer = document.getElementById('stream-container')
             const stillButton = document.getElementById('get-still')
             const streamButton = document.getElementById('toggle-stream')
+            const rebootButton = document.getElementById('trigger-reboot')
             const closeButton = document.getElementById('close-stream')
 
             const stopStream = () => {
@@ -831,6 +833,13 @@
             closeButton.onclick = () => {
                 stopStream()
                 hide(viewContainer)
+            }
+
+            rebootButton.onclick = () => {
+                fetch(`${baseHost}/control?var=reboot&val=true`)
+                        .then(response => {
+                            location.reload(); 
+                        });
             }
 
             streamButton.onclick = () => {
