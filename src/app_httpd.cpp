@@ -563,7 +563,7 @@ void startCameraServer()
 void updateMotors()
 {
 
-    ledcWrite(MOTOR_L_PWM_CHAN, abs(current_speed_left) * 1023); //*max_speed_left/100);
+    ledcWrite(MOTOR_L_PWM_CHAN, abs(current_speed_left) * 1023  * max_speed_left / 100);
     ledcWrite(MOTOR_R_PWM_CHAN, abs(current_speed_right) * 1023 * max_speed_right / 100);
     Serial.println(current_speed_right);
     Serial.println(current_speed_left);
