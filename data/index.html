@@ -390,6 +390,10 @@
             cursor: pointer;
             border-width: 20px;
         }
+
+        #stream {
+            transform: rotate(180deg);
+        }
     </style>
 </head>
 
@@ -432,7 +436,7 @@
                         <input type="range" id="quality" min="10" max="63" value="10" class="default-action">
                         <div class="range-max">63</div>
                     </div>
-                    <div class="input-group" id="max_speed_right-group">
+                    <!--<div class="input-group" id="max_speed_right-group">
                         <label for="max_speed_right">max speed right</label>
                         <div class="range-min">0</div>
                         <input type="range" id="max_speed_right" min="0" max="100" value="50" class="default-action">
@@ -443,7 +447,7 @@
                         <div class="range-min">0</div>
                         <input type="range" id="max_speed_left" min="0" max="100" value="50" class="default-action">
                         <div class="range-max">100</div>
-                    </div>
+                    </div>-->
                     <div class="input-group" id="brightness-group">
                         <label for="brightness">Brightness</label>
                         <div class="range-min">-2</div>
@@ -646,13 +650,6 @@
 
     <script>
 
-        var pressed_w = false;
-        var pressed_a = false;
-        var pressed_s = false;
-        var pressed_d = false;
-        var last_mleft = 0;
-        var last_mright = 0;
-
         document.addEventListener('DOMContentLoaded', function (event) {
             var baseHost = document.location.origin
             var streamUrl = baseHost + ':81'
@@ -750,36 +747,6 @@
                     .then(response => {
                         console.log(`request to ${query} finished, status: ${response.status}`)
                     })
-            }
-
-            function canGame() {
-                return "getGamepads" in navigator;
-            }
-
-            function reportOnGamepad() {
-                var gp = navigator.getGamepads()[0];
-                var html = "";
-                html += "id: " + gp.id + "<br/>";
-                for (var i = 0; i < gp.buttons.length; i++) {
-                    html += "Button " + (i + 1) + ": ";
-                    if (gp.buttons[i].pressed) html += " pressed";
-                    html += "<br/>";
-                }
-                for (var i = 0; i < gp.axes.length; i += 2) {
-                    html += "Stick " + (Math.ceil(i / 2) + 1) + ": " + gp.axes[i] + "," + gp.axes[i + 1] + "<br/>";
-                }
-                document.getElementById('gamepadDisplay').innerHTML = html;
-
-
-                // cave: Button 13,14,15,16 in chrome for logitech are axes[4] and axes[5] in firefox :-/
-                mleft = -gp.axes[1];
-                mright = -gp.axes[3];
-
-                fetch(`${baseHost}/control?var=motor_both&val=` + mleft + `&val2=` + mright)
-                    .then(response => {
-                        console.log(`request finished, status: ${response.status}`)
-                    })
-
             }
 
             document
@@ -909,257 +876,64 @@
                 updateConfig(framesize)
             }
 
-
-
-
-            // control robot with keyboard keys
-            //checks which controlkeys have been pressed and sets motorspeed according to turning values
-            document.addEventListener('keypress', (e) => {
-                mleft = 0;
-                mright = 0;
-
-                console.log("keypress", pressed_w, pressed_a, pressed_s, pressed_d);
-
-
-                if (e.key === "x") {
-                    mleft = 0;
-                    mright = 0;
-                }
-                if (e.key === "w") {
-                    pressed_w = true;
-                }
-                if (e.key === "s") {
-                    pressed_s = true;
-                }
-                if (e.key === "d") {
-                    pressed_d = true;
-                }
-                if (e.key === "a") {
-                    pressed_a = true;
-                }
-                //w
-                if (pressed_w) {
-                    mleft = 1;
-                    mright = 1;
-                }
-                //s
-                if (pressed_s) {
-                    mleft = -1;
-                    mright = -1;
-                }
-                //d
-                if (pressed_d) {
-                    mleft = -0.5;
-                    mright = 0.5;
-                }
-                //a
-                if (pressed_a) {
-                    mleft = 0.5;
-                    mright = -0.5;
-                }
-                // wd
-                if (pressed_w && pressed_a) {
-                    mleft = 1;
-                    mright = 0.5;
-                }
-                // wa
-                if (pressed_w && pressed_d) {
-                    mleft = 0.5;
-                    mright = 1;
-                }
-                // sd
-                if (pressed_s && pressed_a) {
-                    mleft = -1;
-                    mright = -0.5;
-                }
-                // sa
-                if (pressed_s && pressed_d) {
-                    mleft = -0.5;
-                    mright = -1;
-                }
-                // changing Keyinputs trigger data transmission
-                console.log(mleft, last_mleft);
-
-                if (mleft != last_mleft || mright != last_mright) {
-                    console.log(mleft, last_mleft);
-                    last_mright = mright;
-                    last_mleft = mleft;
-                    fetch(`${baseHost}/control?var=motor_both&val=` + mleft + `&val2=` + mright)
-                        .then(response => {
-                            console.log(`request finished, status: ${response.status}`);
-                        })
-
-                }
-
-            });
-
-            //checks which controlkeys have been released and sets motorspeed to 0
-            document.addEventListener('keyup', (e) => {
-                //console.log(e);
-                //console.log(pressed_w,pressed_a,pressed_s,pressed_d);
-
-                if (e.key === "w") {
-                    pressed_w = false;
-                }
-                if (e.key === "a") {
-                    pressed_a = false;
-                }
-                if (e.key === "s") {
-                    pressed_s = false;
-                }
-                if (e.key === "d") {
-                    pressed_d = false;
-                }
-                console.log("keyup", pressed_w, pressed_a, pressed_s, pressed_d)
-                if (pressed_w == false && pressed_a == false && pressed_s == false && pressed_d == false) { //time2stop
-                    mleft = 0;
-                    mright = 0;
-                    last_mleft = 0;
-                    last_mright = 0;
-                    console.log(mleft, mright);
-                    fetch(`${baseHost}/control?var=motor_both&val=` + mleft + `&val2=` + mright)
-                        .then(response => {
-                            console.log(`request finished, status: ${response.status}`)
-                        })
-                }
-            });
-
-            if (canGame()) {
-                var prompt = "To use a gamepad, connect it and press any button!";
-                const gamepadPromptDiv = document.getElementById('gamepadPrompt')
-                gamepadPromptDiv.innerHTML = prompt;
-                window.addEventListener('gamepadconnected', function () {
-                    hasGP = true;
-                    gamepadPromptDiv.innerHTML = 'Gamepad connected!';
-                    console.log("gamepad connection event");
-                    repGP = window.setInterval(reportOnGamepad, 300);
-                });
-
-                window.addEventListener('gamepaddisconnected', function () {
-                    console.log("gamepad disconnection event");
-                    gamepadPromptDiv.innerHTML = prompt;
-                    window.clearInterval(repGP);
-                });
-
-            }
-
-            /* not functional yet, would work but motor speed computation is wrong */
-            var dragItem = document.querySelector("#joystick-item");
-            var container = document.querySelector("#joystick-container");
-
-            var active = false;
-            var currentX;
-            var currentY;
-            var absX;
-            var absY;
-            var initialX;
-            var initialY;
-            var xOffset = 0;
-            var yOffset = 0;
-
-            container.addEventListener("touchstart", dragStart, false);
-            container.addEventListener("touchend", dragEnd, false);
-            container.addEventListener("touchmove", drag, false);
-
-            container.addEventListener("mousedown", dragStart, false);
-            container.addEventListener("mouseup", dragEnd, false);
-            container.addEventListener("mousemove", drag, false);
-
-            function dragStart(e) {
-                if (e.type === "touchstart") {
-                    initialX = e.touches[0].clientX - xOffset;
-                    initialY = e.touches[0].clientY - yOffset;
-                } else {
-                    initialX = e.clientX - xOffset;
-                    initialY = e.clientY - yOffset;
-                }
-
-                if (e.target === dragItem) {
-                    active = true;
-                }
-            }
-
-            function dragEnd(e) {
-                initialX = currentX;
-                initialY = currentY;
-
-                active = false;
-            }
-
-            function map( x,  in_min,  in_max,  out_min,  out_max){
-                return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
-            }
-
-            function drag(e) {
-                if (active) {
-
-                    e.preventDefault();
-
-                    if (e.type === "touchmove") {
-                        currentX = e.touches[0].clientX - initialX;
-                        currentY = e.touches[0].clientY - initialY;
-                    } else {
-                        currentX = e.clientX - initialX;
-                        currentY = e.clientY - initialY;
-                        absX = e.clientX;
-                        absY = e.clientY;
-                    }
-
-                    xOffset = currentX;
-                    yOffset = currentY;
-
-                    setTranslate(currentX, currentY, dragItem);
-                    //console.log(currentX / initialX, currentY / initialY);
-
-                    /*
-                            yneg
-                        xneg        xpos
-                            ypos
-                            y is speed and direction
-                            x is proportion of left to right
-                    */
-                    mleft = map(absX,0,container.clientWidth,-1,1); // (absX)/ container.clientWidth;
-                    mright =map(absX,0,container.clientWidth,1,-1); 
-
-                    console.log(mleft, mright,currentX,initialY,container.clientWidth);
-
-                    mleft = map(currentY,-0.5*container.clientHeight,0.5*container.clientHeight,1,-1) * mleft; // ( mleft * (currentY*-1) ) / container.clientHeight;
-                    mright = map(currentY,-0.5*container.clientHeight,0.5*container.clientHeight,1,-1) * mright;
-
-                    mleft = Math.round(mleft * 10) / 10;
-                    mright = Math.round(mright * 10) / 10;
-                    
-
-                    console.log(mleft, mright, currentX, currentY);
-
-                    if (mleft != last_mleft || mright != last_mright) {
-                    console.log(mleft, last_mleft);
-                    console.log(mleft, last_mleft);
-                    last_mright = mright;
-                    last_mleft = mleft;
-                    fetch(`${baseHost}/control?var=motor_both&val=` + mleft + `&val2=` + mright)
-                        .then(response => {
-                            console.log(`request finished, status: ${response.status}`);
-                        })
-
-                    }
-
-                    /*
-                    fetch(`${baseHost}/control?var=motor_both&val=` + (currentX / initialX) + `&val2=` + (currentY / initialY))
-                        .then(response => {
-                            console.log(`request finished, status: ${response.status}`)
-                        })
-                    */
-                    
-                }
-            }
-
-            function setTranslate(xPos, yPos, el) {
-                el.style.transform = "translate3d(" + xPos + "px, " + yPos + "px, 0)";
-            }
-
         })
 
+    </script>
+
+    <script>
+        "use strict";
+        // Überarbeitete Steuerung für den PR
+        // wsad als String
+        let keys = "0000";
+        let lastKeys = "0000";
+
+        function setCharAt(str, index, chr) {
+            if(index > str.length-1) return str;
+            return str.substring(0,index) + chr + str.substring(index+1);
+        }
+
+        function keyChange(key, isDown) {
+            isDown = isDown ? "1" : "0";
+            
+            if(key === "w") keys = setCharAt(keys, 0, isDown);
+            if(key === "s") keys = setCharAt(keys, 1, isDown);
+            if(key === "a") keys = setCharAt(keys, 2, isDown);
+            if(key === "d") keys = setCharAt(keys, 3, isDown);
+
+            if(lastKeys !== keys) {
+                lastKeys = keys;
+                
+
+                let motors = [0, 0]; // Motorgeschwindigkeiten l + r
+
+                if(keys == "1000") motors = [ 1,  1]; // w
+                if(keys == "0100") motors = [-1, -1]; // s
+                if(keys == "0010") motors = [-1,  1]; // a
+                if(keys == "0001") motors = [ 1, -1]; // d
+
+                if(keys == "1010") motors = [ 0,  1]; // wa
+                if(keys == "1001") motors = [ 1,  0]; // wd
+                if(keys == "0110") motors = [-1,  0]; // sa
+                if(keys == "0101") motors = [ 0, -1]; // sd
+
+                // Motorwerte übermitteln
+                console.log(`/control?var=motor_both&val=` + motors[1] + `&val2=` + motors[0]);
+                fetch(`/control?var=motor_both&val=` + motors[1] + `&val2=` + motors[0]);
+            }
+        }
+
+        // Stopp sekündlich übermitteln (weil wärend Stream Pakete verloren gehen)
+        setInterval(function() {
+            if(keys == "0000") fetch(`/control?var=motor_both&val=0&val2=0`);
+        }, 1000);
+
+        document.addEventListener('keydown', (event) => {
+            keyChange(event.key, true);
+        });
+
+        document.addEventListener('keyup', (event) => {
+            keyChange(event.key, false);
+        });
     </script>
 </body>
 

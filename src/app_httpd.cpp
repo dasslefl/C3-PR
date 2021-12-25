@@ -33,8 +33,8 @@ void updateMotors();
 float current_speed_left = 0.0;
 float current_speed_right = 0.0;
 
-float max_speed_right = 50.0;
-float max_speed_left = 50.0;
+float max_speed_right = 100.0;
+float max_speed_left = 100.0;
 float update_speed_left;
 float update_speed_right;
 
@@ -409,10 +409,8 @@ static esp_err_t cmd_handler(httpd_req_t *req)
         res = s->set_wb_mode(s, val);
     else if (!strcmp(variable, "ae_level"))
         res = s->set_ae_level(s, val);
-    else if (!strcmp(variable, "max_speed_right") && (max_speed_right = val))
-        ;
-    else if (!strcmp(variable, "max_speed_left") && (max_speed_left = val))
-        ;
+    //else if (!strcmp(variable, "max_speed_right") && (max_speed_right = val));
+    //else if (!strcmp(variable, "max_speed_left") && (max_speed_left = val));
     else if (!strcmp(variable, "lamp") && (lampVal != -1))
     {
         Serial.print("Lamp: ");
