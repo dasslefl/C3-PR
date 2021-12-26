@@ -1,0 +1,25 @@
+
+# Startet denöffentlichen Proxy auf Port 80
+
+version: '3.1'
+
+services:
+  nginx:
+    image: nginx:stable-alpine
+    ports:
+      - "80:80"
+    restart: always
+    volumes:
+      - "./nginx.conf:/etc/nginx/nginx.conf:ro"
+      - "./html:/usr/share/nginx/html:ro"
+
+  ssh-server:
+    depends_on:
+      - nginx
+    build: "./ssh-server/."
+    #restart: always
+    ports:
+      - "2200:22"
+    volumes:
+      - "./ssh-host-keys:/etc/ssh/ssh-host-keys"
+      - "./ssh-authorized-keys:/etc/ssh/ssh-authorized-keys:ro"

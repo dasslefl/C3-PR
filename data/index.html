@@ -886,6 +886,7 @@
         // wsad als String
         let keys = "0000";
         let lastKeys = "0000";
+        let stopcount = 10; // Stopp-Befehl im Intervall nur 3x senden (für gemeinsame Steuerung)
 
         function setCharAt(str, index, chr) {
             if(index > str.length-1) return str;
@@ -902,7 +903,7 @@
 
             if(lastKeys !== keys) {
                 lastKeys = keys;
-                
+                stopCount = 0;
 
                 let motors = [0, 0]; // Motorgeschwindigkeiten l + r
 
@@ -924,7 +925,7 @@
 
         // Stopp sekündlich übermitteln (weil wärend Stream Pakete verloren gehen)
         setInterval(function() {
-            if(keys == "0000") fetch(`/control?var=motor_both&val=0&val2=0`);
+            if(keys == "0000" && stopCount++ < 3) fetch(`/control?var=motor_both&val=0&val2=0`);
         }, 1000);
 
         document.addEventListener('keydown', (event) => {

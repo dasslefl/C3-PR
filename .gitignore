@@ -5,3 +5,7 @@
 .vscode/ipch
 src/myconfig.sample.h
 src/myconfig.h
+
+# ssh-Keys
+/pr-proxy-public/ssh-host-keys
+pr-proxy-public/ssh-authorized-keys
