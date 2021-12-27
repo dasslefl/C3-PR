@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# gibt den zu streamenden Content einfach 1:1 durch
+echo "Content-type: multipart/x-mixed-replace;boundary=123456789000000000000987654321"
+echo
+
+while true; do cat /dev/fanout-stream; done;

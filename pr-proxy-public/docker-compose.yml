@@ -4,8 +4,17 @@
 version: '3.1'
 
 services:
+  streamer:
+    build: "./streamer/."
+    restart: always
+    privileged: true
+    volumes:
+      -  "/lib/modules:/lib/modules:ro"
+
   nginx:
     image: nginx:stable-alpine
+    depends_on:
+      - streamer
     ports:
       - "80:80"
     restart: always
@@ -16,10 +25,12 @@ services:
   ssh-server:
     depends_on:
       - nginx
+      - streamer
     build: "./ssh-server/."
-    #restart: always
+    restart: always
     ports:
       - "2200:22"
     volumes:
       - "./ssh-host-keys:/etc/ssh/ssh-host-keys"
       - "./ssh-authorized-keys:/etc/ssh/ssh-authorized-keys:ro"
+
