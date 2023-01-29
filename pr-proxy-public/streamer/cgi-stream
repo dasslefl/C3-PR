@@ -4,4 +4,6 @@
 echo "Content-type: multipart/x-mixed-replace;boundary=123456789000000000000987654321"
 echo
 
+#cat /splash.jpg; echo -n "123456789000000000000987654321"
+
 while true; do cat /dev/fanout-stream; done;

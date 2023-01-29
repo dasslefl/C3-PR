@@ -1,0 +1,5 @@
+#!/bin/bash
+
+while IFS= read -r string; do
+    redis-cli PUBLISH control "$string"
+done

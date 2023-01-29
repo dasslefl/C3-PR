@@ -11,10 +11,17 @@ services:
     volumes:
       -  "/lib/modules:/lib/modules:ro"
 
+  controller:
+    build: "./controller/."
+    ports:
+      - "81:81"
+    #restart: always
+    
   nginx:
     image: nginx:stable-alpine
     depends_on:
       - streamer
+      - controller
     ports:
       - "80:80"
     restart: always

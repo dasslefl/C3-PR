@@ -11,6 +11,8 @@ COPY cgi-stream /html/cgi-bin
 RUN chmod +x /html/cgi-bin/cgi-stream
 RUN echo "Hallo Welt" > /html/index.html
 
+COPY splash.jpg /
+
 COPY entrypoint.sh /
 RUN chmod +x /entrypoint.sh
 
